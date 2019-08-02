@@ -130,17 +130,35 @@ function CreateTetromino() {
   curTetrominoColor = TETROMINOS_COLORS[randomTetromino];
 }
 
+function HittingTheWall() {
+  for (let i = 0; i < curTetromino.length; i++) {
+      let newX = curTetromino[i][0] + startX;
+
+      if (newX <= 0 && direction === DIRECTION.LEFT) {
+        return true;
+      } else if (newX >= 11 && direction == DIRECTION.RIGHT) {
+        return true;
+      }
+  }
+
+  return false;
+}
+
 function HandleKeyPress(key) {
   if (key.keyCode === 65) {
     direction = DIRECTION.LEFT;
-    DeleteTetromino();
-    startX--;
-    DrawTetromino();
+    if (!HittingTheWall()) {
+      DeleteTetromino();
+      startX--;
+      DrawTetromino();
+    }
   } else if (key.keyCode === 68) {
     direction = DIRECTION.RIGHT;
-    DeleteTetromino();
-    startX++;
-    DrawTetromino();
+    if (!HittingTheWall()) {
+      DeleteTetromino();
+      startX++;
+      DrawTetromino();
+    }
   } else if (key.keyCode === 83) {
     direction = DIRECTION.DOWN;
     DeleteTetromino();
