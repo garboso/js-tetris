@@ -59,25 +59,40 @@ function CreateCoordArray() {
 
 function SetupCanvas() {
   const canvasWidth = 936,
-        canvasHeight = 956,
-        boardPositionX = 8,
+        canvasHeight = 956;
+
+  canvas = document.getElementById('my-canvas');
+  canvas.width = canvasWidth;
+  canvas.height = canvasHeight;
+
+  ctx = canvas.getContext('2d');
+  ctx.scale(2,2);
+
+  DrawBoard(canvas);
+  DrawInfo(canvas);
+
+  document.addEventListener('keydown', HandleKeyPress);
+  CreateTetrominos();
+  CreateTetromino();
+
+  CreateCoordArray();
+  DrawTetromino();
+}
+
+function DrawBoard(canvas) {
+  const boardPositionX = 8,
         boardPositionY = 8,
         boardWidth = 280,
         boardHeight = 462;
 
-  canvas = document.getElementById('my-canvas');
-  ctx = canvas.getContext('2d');
-  canvas.width = canvasWidth;
-  canvas.height = canvasHeight;
-
-  ctx.scale(2,2);
-
   ctx.fillStyle = 'white';
-  ctx.fillRect(0, 0, canvasWidth, canvasHeight);
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
 
   ctx.strokeStyle = 'black';
   ctx.strokeRect(boardPositionX, boardPositionY, boardWidth, boardHeight);
+}
 
+function DrawInfo(canvas) {
   tetrisLogo = new Image(161, 54);
   tetrisLogo.src = "tetrislogo.png";
   tetrisLogo.onload = DrawTetrisLogo;
@@ -105,14 +120,6 @@ function SetupCanvas() {
   ctx.fillText("D: move right", 310, 413);
   ctx.fillText("S: move down", 310, 438);
   ctx.fillText("E: rotate", 310, 463);
-
-
-  document.addEventListener('keydown', HandleKeyPress);
-  CreateTetrominos();
-  CreateTetromino();
-
-  CreateCoordArray();
-  DrawTetromino();
 }
 
 function DrawTetrisLogo() {
