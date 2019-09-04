@@ -192,24 +192,187 @@ function HittingTheWall() {
 }
 
 function HandleKeyPress(key) {
-  if (key.keyCode === 65) {
-    direction = DIRECTION.LEFT;
-    if (!HittingTheWall()) {
-      DeleteTetromino();
-      startX--;
-      DrawTetromino();
+  if (winOrLose != "Game Over") {
+    if (key.keyCode === 65) {
+      direction = DIRECTION.LEFT;
+      if (!HittingTheWall() && !CheckForHorizontalCollision()) {
+        DeleteTetromino();
+        startX--;
+        DrawTetromino();
+      }
+    } else if (key.keyCode === 68) {
+      direction = DIRECTION.RIGHT;
+      if (!HittingTheWall() && !CheckForHorizontalCollision()) {
+        DeleteTetromino();
+        startX++;
+        DrawTetromino();
+      }
+    } else if (key.keyCode === 83) {
+      MoveTetrominoDown();
     }
-  } else if (key.keyCode === 68) {
-    direction = DIRECTION.RIGHT;
-    if (!HittingTheWall()) {
-      DeleteTetromino();
-      startX++;
-      DrawTetromino();
-    }
-  } else if (key.keyCode === 83) {
-    direction = DIRECTION.DOWN;
+  }
+}
+
+function MoveTetrominoDown() {
+  direction = DIRECTION.DOWN;
+  if (!CheckForVerticalCollision()) {
     DeleteTetromino();
     startY++;
     DrawTetromino();
+  }
+}
+
+function CheckForVerticalCollision() {
+  let tetrominoCopy = curTetromino,
+  collision = false;
+
+  for (let i = 0; i < tetrominoCopy.length; i++) {
+    let square = tetrominoCopy[i],
+    x = square[0] + startX,
+    y = square[1] + startY;
+
+    if (direction === DIRECTION.DOWN) {
+      y++;
+    }
+
+    if (gameBoardArray[x][y+1] === 1) {
+      if (typeof stoppedShapeArray[x][y+1] === 'string') {
+        DeleteTetromino();
+        startY++;
+        DrawTetromino();
+        collision = true;
+        break;
+      }
+
+      if (y >= 20) {
+        collision = true;
+        break;
+      }
+    }
+
+    if (collision) {
+      if (startY <= 2) {
+        winOrLose = "Game Over";
+        ctx.fillStyle = 'white';
+        ctx.fillRect(310, 242, 140, 30);
+        ctx.fillStyle = 'black';
+        ctx.fillText(winOrLose, 310, 261)
+      } else {
+        for (let i = 0; i < tetrominoCopy.length; i++) {
+          let square = tetrominoCopy[i],
+              x = square[0] + startX,
+              y = square[1] + startY;
+
+          stoppedShapeArray[x][y] = curTetrominoColor;
+        }
+        CheckForCompletedRows();
+        CreateTetromino();
+        direction = DIRECTION.IDLE;
+        startX = 4;
+        startY = 0;
+        DrawTetromino();
+      }
+    }
+  }
+}
+
+function CheckForHorizontalCollision() {
+  let tetrominoCopy = curTetromino;
+  let collision = false;
+
+  for (let i = 0; i < tetrominoCopy.length; i++) {
+    let square = tetrominoCopy[i],
+    x = square[0] + startX,
+    y = square[1] + startY;
+
+    if (direction === DIRECTION.LEFT) {
+      x--;
+    } else if (direction === DIRECTION.RIGHT) {
+      x++;
+    }
+
+    var stoppedShapeVal = stoppedShapeArray[x][y];
+
+    if (typeof stoppedShapeVal === 'string') {
+      collision = true;
+      break;
+    }
+  }
+ 
+  return collision;
+}
+
+function CheckForCompletedRows() {
+  let rowsToDelete = 0,
+      startOfDeletion = 0;
+
+  for (let y = 0; y < GB_ARRAY_HEIGHT; y++) {
+    let completed = true;
+
+    for (let x = 0; x < GB_ARRAY_WIDTH; x++) {
+      let square = stoppedShapeArray[x][y];
+
+      if (square === 0 || (typeof square === 'undefined')) {
+        completed = false;
+        break;
+      }
+    }
+
+    if (completed) {
+      if (startOfDeletion === 0) startOfDeletion = y;
+      rowsToDelete++;
+
+      for (let i = 0; i < GB_ARRAY_WIDTH; i++) {
+        let coorX = coordinateArray[i][y].x,
+            coorY = coordinateArray[i][y].y;
+
+        stoppedShapeArray[i][y] = 0;
+        gameBoardArray[i][y] = 0;
+
+        ctx.fillStyle = 'white';
+        ctx.fillRect = (coorX, coorY, 21, 21);
+      }
+    }
+  }
+
+  if (rowsToDelete > 0) {
+    score += 10;
+    ctx.fillStyle = 'white';
+    ctx.fillRect(310, 109, 140, 19);
+    ctx.fillStyle = 'black';
+    ctx.fillText(score.toString(), 310, 127);
+
+    MoveAllRowsDown(rowsToDelete, startOfDeletion);
+  }
+}
+
+function MoveAllRowsDown(rowsToDelete, startOfDeletion) {
+  for (let i = startOfDeletion - 1; i >= 0; i--) {
+    for (let x = 0; x < GB_ARRAY_WIDTH; x++) {
+      let y2 = i + rowsToDelete,
+          square = stoppedShapeArray[x][i],
+          nextSquare = stoppedShapeArray[x][y2];
+
+      if (typeof square === 'string') {
+        let coorX = coordinateArray[x][y2].x,
+            coorY = coordinateArray[x][y2].y;
+
+        nextSquare = square;
+        gameBoardArray[x][y2] = 1;
+        stoppedShapeArray[x][y2] = square;
+
+        ctx.fillStyle = nextSquare;
+        ctx.fillRect(coorX, coorY, 21, 21);
+
+        square = 0;
+        gameBoardArray[x][i] = 0;
+        stoppedShapeArray[x][i] = 0;
+
+        coorX = coordinateArray[x][i].x;
+        coorY = coordinateArray[x][i].y;
+        ctx.fillStyle = 'white';
+        ctx.fillRect(coorX, coorY, 21, 21);
+      }
+    }
   }
 }
